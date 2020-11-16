@@ -1,4 +1,5 @@
 import os
+import json
 import xml.etree.ElementTree as ET
 
 from pydub import AudioSegment
@@ -9,6 +10,7 @@ AudioSegment.converter = "c:\\code\\ffmpeg"
 def read_xml(path):
     tree = ET.ElementTree(file=path)
     res = []
+    text = []
     try:
         for sbj in tree.iter(tag='subject'):
             if sbj.attrib['value'] != 'search':
@@ -22,28 +24,35 @@ def read_xml(path):
                         start_end.append([item.attrib['start'], item.attrib['end']])
                     tmp = {cur_channel: start_end}
                     res.append(tmp)
+                for cur_text, cur_time in zip(elem.iter(tag='text'), elem.iter(tag='time')):
+                    text.append([cur_text.text, cur_time.text])
     except:
         print(path + " error")
-        return []
+        return [], []
 
-    return res
+    return res, text
 
 
 def get_wav_slice(xml_file_path):
     wav_path = xml_file_path.replace("../data/xml/", "../data/wav/").replace(".xml", "")
     cur_wav_id = wav_path.replace("../data/wav/", "").replace(".wav", "") + "/"
     s_e_res_dict = []
+    res_text = []
     try:
-        s_e_res_dict = read_xml(xml_file_path)
+        s_e_res_dict, res_text = read_xml(xml_file_path)
         print(xml_file_path)
     except:
         print("Error: " + xml_file_path)
     if not s_e_res_dict:
         return
-    
+
     target_path = "../data/processed_data/" + cur_wav_id
     if not os.path.exists(target_path):
         os.mkdir(target_path)
+
+    text_path = target_path + "text_time.json"
+    with open(text_path, "w+", encoding='utf-8') as f:
+        json.dump(res_text, f, indent=1, ensure_ascii=False)
 
     cur_audio = AudioSegment.from_file(wav_path, format='wav')
 
