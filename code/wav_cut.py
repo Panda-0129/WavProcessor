@@ -32,8 +32,12 @@ def read_xml(path):
 def get_wav_slice(xml_file_path):
     wav_path = xml_file_path.replace("../data/xml/", "../data/wav/").replace(".xml", "")
     cur_wav_id = wav_path.replace("../data/wav/", "").replace(".wav", "") + "/"
-    s_e_res_dict = read_xml(xml_file_path)
-
+    s_e_res_dict = []
+    try:
+        s_e_res_dict = read_xml(xml_file_path)
+        print(xml_file_path)
+    except:
+        print("Error: " + xml_file_path)
     if not s_e_res_dict:
         return
     
