@@ -3,25 +3,28 @@ import xml.etree.ElementTree as ET
 
 from pydub import AudioSegment
 
-
 AudioSegment.converter = "c:\\code\\ffmpeg"
 
 
 def read_xml(path):
     tree = ET.ElementTree(file=path)
     res = []
-    for sbj in tree.iter(tag='subject'):
-        if sbj.attrib['value'] != 'search':
-            continue
-        for elem in sbj.iter(tag='channel'):
-            cur_channel = elem.attrib['no']
-            for child in elem.iter(tag='items'):
-                start_end = []
-                duration_list = child.getchildren()
-                for item in duration_list:
-                    start_end.append([item.attrib['start'], item.attrib['end']])
-                tmp = {cur_channel: start_end}
-                res.append(tmp)
+    try:
+        for sbj in tree.iter(tag='subject'):
+            if sbj.attrib['value'] != 'search':
+                continue
+            for elem in sbj.iter(tag='channel'):
+                cur_channel = elem.attrib['no']
+                for child in elem.iter(tag='items'):
+                    start_end = []
+                    duration_list = child.getchildren()
+                    for item in duration_list:
+                        start_end.append([item.attrib['start'], item.attrib['end']])
+                    tmp = {cur_channel: start_end}
+                    res.append(tmp)
+    except:
+        print(path + " error")
+        return []
 
     return res
 
@@ -31,6 +34,9 @@ def get_wav_slice(xml_file_path):
     cur_wav_id = wav_path.replace("../data/wav/", "").replace(".wav", "") + "/"
     s_e_res_dict = read_xml(xml_file_path)
 
+    if not s_e_res_dict:
+        return
+    
     target_path = "../data/processed_data/" + cur_wav_id
     if not os.path.exists(target_path):
         os.mkdir(target_path)
